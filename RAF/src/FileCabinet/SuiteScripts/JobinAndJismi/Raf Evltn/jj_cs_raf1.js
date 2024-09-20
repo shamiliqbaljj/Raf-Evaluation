@@ -1,14 +1,27 @@
 /**
+ * 
+ * 
+ * Author : Jobin And Jismi IT Services
+ * 
+ * Date Created : 20 - September - 2024
+ * 
+ * Description : Custom Sales Order Creation
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
  * @NApiVersion 2.x
  * @NScriptType ClientScript
  * @NModuleScope SameAccount
  */
-define(['N/record', 'N/search'],
+define(['N/record', 'N/search','N/email'],
 /**
  * @param{record} record
  * @param{search} search
  */
-function(record, search) {
+function(record, search, email) {
     
     /**
      * Function to be executed after page is initialized.
@@ -241,7 +254,7 @@ return true;
      */
     function saveRecord(scriptContext) {
 
-        
+        try{
         let currentRecord = scriptContext.currentRecord;
         let itemName = currentRecord.getSublistValue({
             sublistId : 'salesordersublist',
@@ -305,6 +318,7 @@ return true;
             salesOrderRecord.commitLine ({
                 sublistId : 'item'
             });
+
             let recordId = salesOrderRecord.save({
                 enableSourcing : false,
                 ignoreMandatoryFields : true
@@ -318,7 +332,7 @@ return true;
             });
             let searchResult = mySearch.run().getRange({
                 start : 0,
-                end : 50
+                end : 2
             })
     
             for (var i = 0; i < searchResult.length; i++) {
@@ -341,14 +355,46 @@ return true;
             });
             let searchResult = mySearch.run().getRange({
                 start : 0,
-                end : 50
+                end : 2
             });
             for (var i = 0; i < searchResult.length; i++) {
                 var supervisorId = searchResult[i].getValue({
                     name: 'supervisor'
                 });     
             }
-            alert(supervisorId);
+            var mySearch = search.create({
+                title: "Supervisor",
+                type: search.Type.EMPLOYEE,
+                filters: ['internalid','is',supervisorId],
+                columns: ['email']
+            });
+            let searchResults = mySearch.run().getRange({
+                start : 0,
+                end : 2
+            });
+            for (var i = 0; i < searchResult.length; i++) {
+                var emailId = searchResult[i].getText({
+                    name: 'email'
+                });   
+                alert (emailId);
+
+                    
+                // var transactionFile = render.transaction({
+                // entityId: recordId,
+                // printMode: render.PrintMode.PDF
+                // });
+                  
+
+                email.send({
+                    author: 26,
+                    recipients: "abc@gmail.com",
+                    subject: 'Sales Order',
+                    body: 'Sales Order Created for amount above 500'
+                    // attachments:[transactionFile]
+                });
+                
+            
+            }
             
             }
 
@@ -404,6 +450,11 @@ return true;
             
             
         }
+    }
+    catch(error)    
+    {
+        log.debug(error);
+    }
 
         
 
